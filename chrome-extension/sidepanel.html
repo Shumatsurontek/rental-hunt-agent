@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rental Hunt Agent</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <div class="brand-lockup">
+          <span class="mascot" aria-hidden="true">🦔</span>
+          <div>
+            <p class="eyebrow">RENTAL HUNT</p>
+            <h1>Agent console</h1>
+          </div>
+        </div>
+        <div id="connection-pill" class="pill pill-offline">Not connected</div>
+      </header>
+
+      <details id="connection-settings" class="panel settings-panel" open>
+        <summary>Connection</summary>
+        <form id="settings-form" class="stack">
+          <label>
+            API origin
+            <input
+              id="api-base-url"
+              name="api-base-url"
+              type="url"
+              value="http://127.0.0.1:8000"
+              autocomplete="url"
+              required
+            />
+          </label>
+          <label>
+            Admin bearer token
+            <input
+              id="admin-token"
+              name="admin-token"
+              type="password"
+              minlength="24"
+              autocomplete="off"
+              required
+            />
+          </label>
+          <p class="hint">Stored only in this Chrome profile. The extension requests access to this origin when saved.</p>
+          <button id="save-settings" class="button button-primary" type="submit">Save &amp; connect</button>
+        </form>
+      </details>
+
+      <section class="panel" aria-labelledby="deployment-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">DEPLOYMENT</p>
+            <h2 id="deployment-heading">Runtime</h2>
+          </div>
+          <div class="heading-actions">
+            <button id="deliver-button" class="text-button" type="button" title="Poll alerts now">Deliver alerts</button>
+            <button id="refresh-button" class="icon-button" type="button" title="Refresh">↻</button>
+          </div>
+        </div>
+        <dl class="status-grid">
+          <div><dt>Readiness</dt><dd id="ready-value">—</dd></div>
+          <div><dt>Source</dt><dd id="source-value">—</dd></div>
+          <div><dt>Model</dt><dd id="model-value">—</dd></div>
+          <div><dt>Queue</dt><dd id="queue-value">—</dd></div>
+          <div><dt>Alerts</dt><dd id="notifications-value">—</dd></div>
+          <div><dt>LangSmith</dt><dd id="tracing-value">—</dd></div>
+        </dl>
+        <p id="runtime-error" class="error-message" hidden></p>
+        <button id="reload-extension-button" class="button runtime-reload" type="button" hidden>Reload extension</button>
+      </section>
+
+      <section class="panel" aria-labelledby="watch-heading">
+        <div class="section-heading watch-heading">
+          <div>
+            <p class="eyebrow">WATCH</p>
+            <h2 id="watch-heading">SeLoger scan</h2>
+          </div>
+          <div class="heading-actions">
+            <button id="edit-watch-button" class="button button-small" type="button" hidden>Edit watcher</button>
+            <button id="scan-button" class="button button-small button-primary" type="button" disabled>Explore with agent</button>
+          </div>
+        </div>
+        <div id="watch-empty" class="watch-empty">
+          <p id="watch-empty-message" class="empty-state">No active watch. Configure the hard filters to start monitoring.</p>
+          <form id="watch-setup-form" class="stack watch-setup">
+            <div class="field-group">
+              <span class="label-heading">
+                <label for="watch-search-url">Filtered SeLoger results URL</label>
+                <button id="use-current-search-button" class="text-button inline-action" type="button">Use open tab</button>
+              </span>
+              <input
+                id="watch-search-url"
+                name="watch-search-url"
+                type="url"
+                maxlength="2083"
+                placeholder="https://www.seloger.com/list.htm?..."
+                autocomplete="url"
+                required
+              />
+            </div>
+            <div class="form-grid">
+              <label>
+                Maximum monthly rent (€)
+                <input
+                  id="watch-rent-max"
+                  name="watch-rent-max"
+                  type="number"
+                  min="1"
+                  max="20000"
+                  step="1"
+                  placeholder="2200"
+                  required
+                />
+              </label>
+              <label>
+                Minimum surface (m²)
+                <input
+                  id="watch-surface-min"
+                  name="watch-surface-min"
+                  type="number"
+                  min="0.01"
+                  max="500"
+                  step="0.01"
+                  placeholder="40"
+                  required
+                />
+              </label>
+              <label>
+                Minimum rooms
+                <input
+                  id="watch-rooms-min"
+                  name="watch-rooms-min"
+                  type="number"
+                  min="1"
+                  max="20"
+                  step="1"
+                  placeholder="No minimum"
+                />
+              </label>
+              <label>
+                Furnished
+                <select id="watch-furnished" name="watch-furnished">
+                  <option value="any" selected>Any</option>
+                  <option value="required">Required</option>
+                  <option value="forbidden">Forbidden</option>
+                </select>
+              </label>
+              <label>
+                Scan frequency
+                <select id="watch-poll-interval" name="watch-poll-interval">
+                  <option value="120">Every 2 minutes</option>
+                  <option value="300">Every 5 minutes</option>
+                  <option value="600" selected>Every 10 minutes</option>
+                  <option value="900">Every 15 minutes</option>
+                  <option value="1800">Every 30 minutes</option>
+                  <option value="3600">Every 60 minutes</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              Allowed postal codes
+              <input
+                id="watch-postal-codes"
+                name="watch-postal-codes"
+                type="text"
+                maxlength="299"
+                placeholder="75011, 75012"
+                autocomplete="postal-code"
+              />
+            </label>
+            <label>
+              Soft preferences <span class="label-note">one per line, optional</span>
+              <textarea
+                id="watch-soft-preferences"
+                name="watch-soft-preferences"
+                rows="3"
+                maxlength="4019"
+                placeholder="Quiet street&#10;Close to Métro line 9"
+              ></textarea>
+            </label>
+            <p class="hint">Budget, surface, rooms, and newest-first order are mirrored into the saved SeLoger URL. Select location and furnished filters on SeLoger itself. The resulting search must report at most 150 results. Editing the URL or preferences starts a clean baseline revision while preserving prior history.</p>
+            <p id="watch-setup-error" class="error-message" hidden></p>
+            <div class="form-actions">
+              <button id="cancel-watch-edit-button" class="button" type="button" hidden>Cancel</button>
+              <button id="create-watch-button" class="button button-primary" type="submit" disabled>Create watcher</button>
+            </div>
+          </form>
+        </div>
+        <div id="watch-details" hidden>
+          <div class="watch-link-row">
+            <a id="watch-url" class="watch-url" href="#" target="_blank" rel="noreferrer">Open saved search</a>
+            <span id="watch-version" class="revision-badge">rev —</span>
+          </div>
+          <p id="watch-meta" class="muted"></p>
+          <dl class="watch-config-grid">
+            <div><dt>Budget</dt><dd id="watch-budget-summary">—</dd></div>
+            <div><dt>Surface</dt><dd id="watch-surface-summary">—</dd></div>
+            <div><dt>Rooms</dt><dd id="watch-rooms-summary">—</dd></div>
+            <div><dt>Furnished</dt><dd id="watch-furnished-summary">—</dd></div>
+            <div><dt>Postal codes</dt><dd id="watch-postal-summary">—</dd></div>
+            <div><dt>Frequency</dt><dd id="watch-frequency-summary">—</dd></div>
+          </dl>
+          <p id="watch-soft-summary" class="muted watch-soft-summary"></p>
+          <p class="hint watch-capture-hint">Scans reopen this exact saved URL inside your Chrome profile, using its normal browser session to avoid server-side anti-bot blocks.</p>
+        </div>
+        <div id="job-status" class="job-status" hidden></div>
+        <div class="browser-eyes" aria-labelledby="browser-eyes-heading">
+          <div class="browser-eyes-heading">
+            <div>
+              <p class="eyebrow">CHROME EYES</p>
+              <h3 id="browser-eyes-heading">Browser snapshots</h3>
+            </div>
+            <span id="browser-snapshot-state" class="snapshot-state">idle</span>
+          </div>
+          <p id="browser-snapshot-phase" class="muted">No exploration captured yet.</p>
+          <ol id="browser-snapshot-list" class="snapshot-list">
+            <li class="empty-state">The agent will show each bounded SeLoger page snapshot here.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="listings-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">RECENT</p>
+            <h2 id="listings-heading">Hard matches</h2>
+          </div>
+          <span id="listing-count" class="counter">0</span>
+        </div>
+        <div id="listings" class="listing-list">
+          <p class="empty-state">Connect to load listings.</p>
+        </div>
+      </section>
+
+      <section class="panel chat-panel" aria-labelledby="chat-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">READ-ONLY</p>
+            <h2 id="chat-heading">Chat with the agent</h2>
+          </div>
+          <button id="clear-chat" class="text-button" type="button">Clear</button>
+        </div>
+        <div id="chat-log" class="chat-log" aria-live="polite" aria-busy="false">
+          <p class="empty-state">Ask about deployment state, matches, or failures.</p>
+        </div>
+        <form id="chat-form" class="chat-form">
+          <label class="sr-only" for="chat-input">Message</label>
+          <textarea
+            id="chat-input"
+            rows="3"
+            maxlength="2000"
+            placeholder="Why is the queue blocked?"
+            required
+          ></textarea>
+          <div class="chat-actions">
+            <span id="chat-state" class="muted"></span>
+            <button id="send-chat" class="button button-primary" type="submit" disabled>Send</button>
+          </div>
+        </form>
+      </section>
+
+      <footer>
+        Setup, Chrome-assisted scans, and Interested/Dismiss feedback are explicit actions. Chat stays read-only and cannot contact landlords.
+      </footer>
+    </main>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

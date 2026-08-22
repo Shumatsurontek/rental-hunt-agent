@@ -1,0 +1,64 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rental-hunt-agent"
+version = "0.1.0"
+description = "Bounded SeLoger rental watcher with Deep Agents and Chrome notifications"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "alembic==1.19.1",
+    "deepagents==0.7.8",
+    "fastapi==0.141.1",
+    "httpx==0.28.1",
+    "langchain-ollama==1.1.0",
+    "langchain-openai==1.6.0",
+    "langgraph-checkpoint-postgres==3.1.2",
+    "langsmith==0.11.1",
+    "playwright==1.62.0",
+    "psycopg[binary,pool]==3.3.4",
+    "pydantic-settings>=2.10,<3",
+    "sqlalchemy==2.0.52",
+    "uvicorn[standard]>=0.35,<1",
+]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.21,<1",
+    "mypy>=1.17,<2",
+    "pytest>=8.4,<9",
+    "pytest-asyncio>=1.1,<2",
+    "pytest-cov>=6.2,<7",
+    "ruff>=0.12,<1",
+]
+
+[project.scripts]
+rental-hunt = "rental_hunt.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rental_hunt"]
+
+[tool.pytest.ini_options]
+addopts = "-q --strict-config --strict-markers"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["A", "ASYNC", "B", "C4", "E", "F", "I", "N", "PERF", "PIE", "PL", "RUF", "S", "SIM", "UP"]
+ignore = ["PLR2004"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+"alembic/**/*.py" = ["E501", "INP001"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+packages = ["rental_hunt"]

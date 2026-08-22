@@ -1,0 +1,44 @@
+services:
+  app:
+    build: .
+    command: ["serve"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-rental_hunt}:${POSTGRES_PASSWORD:-rental_hunt}@postgres:5432/${POSTGRES_DB:-rental_hunt}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+    shm_size: "1gb"
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - browser-data:/data/browser
+      - debug-data:/data/debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:17.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rental_hunt}
+      POSTGRES_USER: ${POSTGRES_USER:-rental_hunt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rental_hunt}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rental_hunt} -d ${POSTGRES_DB:-rental_hunt}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  browser-data:
+  debug-data:
+  postgres-data:
